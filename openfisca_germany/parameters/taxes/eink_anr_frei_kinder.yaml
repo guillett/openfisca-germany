@@ -1,0 +1,25 @@
+brackets:
+- rate:
+    2005-10-01:
+      value: 1.0
+  threshold:
+    2005-10-01:
+      value: 0
+- rate:
+    2005-10-01:
+      value: 0.2
+  threshold:
+    2005-10-01:
+      value: 100
+- rate:
+    2005-10-01:
+      value: 0.1
+  threshold:
+    2005-10-01:
+      value: 800
+- rate:
+    2005-10-01:
+      value: 0
+  threshold:
+    2005-10-01:
+      value: 1500

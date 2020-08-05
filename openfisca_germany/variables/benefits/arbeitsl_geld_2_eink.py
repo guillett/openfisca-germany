@@ -2,7 +2,7 @@ from openfisca_core.variables import Variable
 from openfisca_core.periods import YEAR, MONTH
 from openfisca_germany.entities import Household, Person, TaxUnit
 
-from numpy import minimum, maximum
+from numpy import minimum, maximum, nan_to_num
 
 
 class _arbeitsl_geld_2_brutto_eink_hh(Variable):
@@ -19,7 +19,7 @@ class _arbeitsl_geld_2_brutto_eink(Variable):
     entity = Person
     definition_period = YEAR
 
-    def formula(people, period):
+    def formula(person, period):
       sources = [
         # 'bruttolohn_m',
         # 'sonstig_eink_m',
@@ -30,7 +30,7 @@ class _arbeitsl_geld_2_brutto_eink(Variable):
         # 'arbeitsl_geld_m',
         # 'elterngeld_m',
       ]
-      return sum([people(s, period) for s in sources])
+      return sum([person(s, period) for s in sources])
 
 
 class bruttolohn_m(Variable):
@@ -63,6 +63,15 @@ class bewohnt_eigentum_hh(Variable):
     definition_period = YEAR
 
 
+class kinder_in_hh(Variable):
+    value_type = bool
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.any(household.members('kind', period))
+
+
 class berechtigte_wohnfläche_hh(Variable):
     value_type = float
     entity = Household
@@ -77,6 +86,50 @@ class berechtigte_wohnfläche_hh(Variable):
         maximal_nicht_be = (45 + maximum(0, haushaltsgröße_hh - 1) * 15)
         maximal = bewohnt_eigentum_hh * maximal_be + (~bewohnt_eigentum_hh) * maximal_nicht_be
         return minimum(wohnfläche_hh, maximal)
+
+
+class eink_anr_frei(Variable):
+    value_type = float
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period, parameters):
+        P = parameters(period).taxes
+        return P.eink_anr_frei.calc(person('bruttolohn_m', period)) * person('arbeitsl_geld_2_2005_netto_quote', period)
+
+    def formula_2005_10(person, period, parameters):
+        P = parameters(period).taxes
+        out = P.eink_anr_frei.calc(person('bruttolohn_m', period))
+        kinder_in_hh = person.household('kinder_in_hh', period)
+        sub = P.eink_anr_frei_kinder.calc(person('bruttolohn_m', period))
+        out[kinder_in_hh] = sub[kinder_in_hh]
+        return out
+
+
+class arbeitsl_geld_2_2005_netto_quote(Variable):
+    value_type = float
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        nettolohn_m = person('nettolohn_m', period)
+        bruttolohn_m = person('bruttolohn_m', period)
+        return nan_to_num(maximum(0,  nettolohn_m - 15.33 - 30) / bruttolohn_m)
+
+
+class nettolohn_m(Variable):
+    value_type = float
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        anz_erwachsene_tu = person.tax_unit.sum(~person('kind', period))
+        return maximum(0,
+            person('bruttolohn_m', period)
+            - person.tax_unit('eink_st_tu', period) / anz_erwachsene_tu / 12
+            - person.tax_unit('soli_st_tu', period) / anz_erwachsene_tu / 12
+            - person('sozialv_beitr_m', period)
+        )
 
 class eink_selbst_m(Variable):
     value_type = float
@@ -125,6 +178,11 @@ class kapital_eink_m(Variable):
     entity = Person
     definition_period = YEAR
 
+
+class kind(Variable):
+    value_type = bool
+    entity = Person
+    definition_period = YEAR
 
 class kindergeld_m_hh(Variable):
     value_type = float
@@ -176,7 +234,6 @@ class unterhaltsvors_m(Variable):
     value_type = float
     entity = Person
     definition_period = YEAR
-
 
 
 class unterhaltsvors_m_hh(Variable):
