@@ -39,6 +39,24 @@ Household = build_entity(
         ]
     )
 
+TaxUnit = build_entity(
+    key = "tax_unit",
+    plural = "tax_units",
+    label = "Tax unit",
+    roles = [
+        {
+            'key': 'head',
+            'plural': 'heads',
+            'label': 'Head'
+            },
+        {
+            'key': 'other',
+            'plural': 'others',
+            'label': 'Other'
+            }
+        ]
+    )
+
 Person = build_entity(
     key = "person",
     plural = "persons",
@@ -56,4 +74,4 @@ Person = build_entity(
     is_person = True,
     )
 
-entities = [Household, Person]
+entities = [Household, TaxUnit, Person]
