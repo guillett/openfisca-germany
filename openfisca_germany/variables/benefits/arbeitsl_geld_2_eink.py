@@ -178,6 +178,16 @@ class unterhaltsvors_m(Variable):
     definition_period = YEAR
 
 
+
+class unterhaltsvors_m_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.sum(household.members('unterhaltsvors_m', period))
+
+
 class vermiet_eink_m(Variable):
     value_type = float
     entity = Person
