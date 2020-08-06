@@ -1,0 +1,16 @@
+reference: Artikel 1 G. v. 24.12.2003 BGBl. I S. 2954.
+zwei_erwachsene:
+  values:
+    2005-01-01: 0.9
+weitere_erwachsene:
+  values:
+    2005-01-01: 0.8
+kinder_0_6:
+  values:
+    2005-01-01: 0.6
+kinder_7_13:
+  values:
+    2005-01-01: 0.6
+kinder_14_24:
+  values:
+    2005-01-01: 0.8

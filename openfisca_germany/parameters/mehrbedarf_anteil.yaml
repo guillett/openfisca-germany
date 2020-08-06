@@ -1,0 +1,29 @@
+# name:
+#   de: >-
+#     Erster Schlüssel ist Mehrbedarf AE bei mind. einem Kind unter 7 Jahren oder zwei
+#     oder drei Kindern unter 16 Jahre. Der Zweite gibt den Mehrbedarf an wenn der
+#     Anspruch größer ist als der für den ersten Schlüssel. Der dritte Schlüssel gibt
+#     den Maximalanteil für den Mehrbedarf für Alleinerziehende gemessen am maßgebenden
+#     Regelbedarf.
+#   en: >-
+#     Additional need, single parent, one child below 7 or two or three children
+#     below 16. Additional need, single parent, one or more children. Upper limit
+#     additional need for single parents
+description:
+  de: § 21 (3) Nr. 1 SGB II.
+  en:
+unit: share
+# time: month
+min_1_kind:
+  values:
+    2005-01-01:
+      value: 0.12
+kind_unter_7_oder_mehr:
+  values:
+    2005-01-01:
+      value: 0.36
+max:
+  values:
+    2005-01-01:
+      value: 0.6
+reference: G. v. 24.12.2003 BGBl. I S. 2954.

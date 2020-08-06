@@ -2,7 +2,7 @@ from openfisca_core.variables import Variable
 from openfisca_core.periods import YEAR, MONTH
 from openfisca_germany.entities import Household, Person, TaxUnit
 
-from numpy import minimum, maximum, nan_to_num
+from numpy import minimum, maximum, nan_to_num, where
 
 
 class _arbeitsl_geld_2_brutto_eink_hh(Variable):
@@ -84,6 +84,15 @@ class alter(Variable):
     value_type = float
     entity = Person
     definition_period = YEAR
+
+
+class anz_erwachsene_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.sum(~household.members('kind', period))
 
 
 class _anz_erwachsene_tu(Variable):
@@ -170,15 +179,6 @@ class bewohnt_eigentum_hh(Variable):
     value_type = bool
     entity = Household
     definition_period = YEAR
-
-
-class kinder_in_hh(Variable):
-    value_type = bool
-    entity = Household
-    definition_period = YEAR
-
-    def formula(household, period):
-        return household.any(household.members('kind', period))
 
 
 class berechtigte_wohnfläche_hh(Variable):
@@ -268,10 +268,83 @@ class kind(Variable):
     entity = Person
     definition_period = YEAR
 
+
+class kind_zwischen_0_6(Variable):
+    value_type = bool
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        alter = person('alter', period)
+        kind = person('kind', period)
+        return kind & (0 <= alter) & (alter <= 6)
+
+
+class kind_zwischen_7_13(Variable):
+    value_type = bool
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        alter = person('alter', period)
+        kind = person('kind', period)
+        return kind & (7 <= alter) & (alter <= 13)
+
+
+class kind_zwischen_14_24(Variable):
+    value_type = bool
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        alter = person('alter', period)
+        kind = person('kind', period)
+        return kind & (14 <= alter) & (alter <= 24)
+
+
+class kinder_in_hh(Variable):
+    value_type = bool
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.any(household.members('kind', period))
+
+
 class kindergeld_m_hh(Variable):
     value_type = float
     entity = Household
     definition_period = YEAR
+
+
+class kindersatz_m_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period, parameters):
+        P = parameters(period)
+        anteile = P.anteil_regelsatz
+
+        per_child = P.regelsatz.value * (
+            anteile.kinder_0_6 * household.members('kind_zwischen_0_6', period)
+            + anteile.kinder_7_13 * household.members('kind_zwischen_7_13', period)
+            + anteile.kinder_14_24 * household.members('kind_zwischen_14_24', period)
+        )
+
+        return household.sum(per_child)
+
+    def formula_2011(household, period, parameters):
+        P = parameters(period)
+        anteile = P.anteil_regelsatz
+
+        per_child = (
+            P.regelsatz.six * household.members('kind_zwischen_0_6', period)
+            + P.regelsatz.five * household.members('kind_zwischen_7_13', period)
+            + P.regelsatz.four * household.members('kind_zwischen_14_24', period)
+        )
+
+        return household.sum(per_child)
 
 
 class kost_unterk_m_hh(Variable):
@@ -309,6 +382,58 @@ class nettolohn_m(Variable):
             - person.tax_unit('soli_st_tu', period) / _anz_erwachsene_tu / 12
             - person('sozialv_beitr_m', period)
         )
+
+
+class regelbedarf_m_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household('regelsatz_m_hh', period) + household('kost_unterk_m_hh', period)
+
+
+class regelsatz_m_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period, parameters):
+        kindersatz_m_hh = household('kindersatz_m_hh', period)
+        anz_erwachsene_hh = household('anz_erwachsene_hh', period)
+        alleinerziehenden_mehrbedarf_hh = household('alleinerziehenden_mehrbedarf_hh', period)
+
+        P = parameters(period)
+        data = where(
+            anz_erwachsene_hh == 1,
+            P.regelsatz.value * (1 + alleinerziehenden_mehrbedarf_hh),
+            P.regelsatz.value
+            * (
+                (2 + alleinerziehenden_mehrbedarf_hh)
+                * P.anteil_regelsatz.zwei_erwachsene
+                + (anz_erwachsene_hh - 2).clip(min=0)
+                * P.anteil_regelsatz.weitere_erwachsene
+            ),
+        )
+        return kindersatz_m_hh + data
+
+    def formula_2011(household, period, parameters):
+        kindersatz_m_hh = household('kindersatz_m_hh', period)
+        anz_erwachsene_hh = household('anz_erwachsene_hh', period)
+        alleinerziehenden_mehrbedarf_hh = household('alleinerziehenden_mehrbedarf_hh', period)
+
+        P = parameters(period)
+        data = where(
+            anz_erwachsene_hh == 1,
+            P.regelsatz.one * (1 + alleinerziehenden_mehrbedarf_hh),
+            P.regelsatz.two * (2 + alleinerziehenden_mehrbedarf_hh)
+            + (
+                P.regelsatz.three
+                * (anz_erwachsene_hh - 2).clip(min=0)
+            ),
+        )
+
+        return kindersatz_m_hh + data
 
 
 class soli_st_tu(Variable):
