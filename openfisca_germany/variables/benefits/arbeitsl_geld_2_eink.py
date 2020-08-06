@@ -82,6 +82,15 @@ class arbeitsl_geld_2_eink(Variable):
             )
 
 
+class arbeitsl_geld_2_eink_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.sum(household.members('arbeitsl_geld_2_eink', period))
+
+
 class arbeitsl_geld_2_2005_netto_quote(Variable):
     value_type = float
     entity = Person

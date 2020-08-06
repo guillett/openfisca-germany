@@ -51,7 +51,7 @@ OUT_COLS = [
     "unterhaltsvors_m_hh",
     "eink_anr_frei",
     "arbeitsl_geld_2_eink",
-    # "arbeitsl_geld_2_eink_hh",
+    "arbeitsl_geld_2_eink_hh",
 ]
 
 
