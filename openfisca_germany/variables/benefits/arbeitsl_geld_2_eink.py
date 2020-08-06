@@ -21,14 +21,14 @@ class _arbeitsl_geld_2_brutto_eink(Variable):
 
     def formula(person, period):
       sources = [
-        # 'bruttolohn_m',
-        # 'sonstig_eink_m',
-        # 'eink_selbst_m',
-        # 'vermiet_eink_m',
-        # 'kapital_eink_m',
-        # 'ges_rente_m',
-        # 'arbeitsl_geld_m',
-        # 'elterngeld_m',
+        'bruttolohn_m',
+        'sonstig_eink_m',
+        'eink_selbst_m',
+        'vermiet_eink_m',
+        'kapital_eink_m',
+        'ges_rente_m',
+        'arbeitsl_geld_m',
+        'elterngeld_m',
       ]
       return sum([person(s, period) for s in sources])
 
@@ -51,10 +51,46 @@ class alter(Variable):
     definition_period = YEAR
 
 
+class _anz_erwachsene_tu(Variable):
+    value_type = float
+    entity = TaxUnit
+    definition_period = YEAR
+    
+    def formula(tax_unit, period):
+        return tax_unit.sum(~tax_unit.members('kind', period))
+
+
 class arbeitsl_geld_m(Variable):
     value_type = float
     entity = Person
     definition_period = YEAR
+
+
+class arbeitsl_geld_2_eink(Variable):
+    value_type = float
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        _anz_erwachsene_tu = person.tax_unit('_anz_erwachsene_tu', period)
+        return maximum(0, 
+            person('_arbeitsl_geld_2_brutto_eink', period)
+            - (person.tax_unit('eink_st_tu', period) / _anz_erwachsene_tu) / 12
+            - (person.tax_unit('soli_st_tu', period) / _anz_erwachsene_tu) / 12
+            - person('sozialv_beitr_m', period)
+            - person('eink_anr_frei', period)
+            )
+
+
+class arbeitsl_geld_2_2005_netto_quote(Variable):
+    value_type = float
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        nettolohn_m = person('nettolohn_m', period)
+        bruttolohn_m = person('bruttolohn_m', period)
+        return nan_to_num(maximum(0,  nettolohn_m - 15.33 - 30) / bruttolohn_m)
 
 
 class bewohnt_eigentum_hh(Variable):
@@ -105,31 +141,6 @@ class eink_anr_frei(Variable):
         out[kinder_in_hh] = sub[kinder_in_hh]
         return out
 
-
-class arbeitsl_geld_2_2005_netto_quote(Variable):
-    value_type = float
-    entity = Person
-    definition_period = YEAR
-
-    def formula(person, period):
-        nettolohn_m = person('nettolohn_m', period)
-        bruttolohn_m = person('bruttolohn_m', period)
-        return nan_to_num(maximum(0,  nettolohn_m - 15.33 - 30) / bruttolohn_m)
-
-
-class nettolohn_m(Variable):
-    value_type = float
-    entity = Person
-    definition_period = YEAR
-
-    def formula(person, period):
-        anz_erwachsene_tu = person.tax_unit.sum(~person('kind', period))
-        return maximum(0,
-            person('bruttolohn_m', period)
-            - person.tax_unit('eink_st_tu', period) / anz_erwachsene_tu / 12
-            - person.tax_unit('soli_st_tu', period) / anz_erwachsene_tu / 12
-            - person('sozialv_beitr_m', period)
-        )
 
 class eink_selbst_m(Variable):
     value_type = float
@@ -210,6 +221,21 @@ class miete_pro_qm_hh(Variable):
         wohnfläche_hh = household('wohnfläche_hh', period)
 
         return minimum(10, ((kaltmiete_m_hh + heizkosten_m_hh) / wohnfläche_hh))
+
+
+class nettolohn_m(Variable):
+    value_type = float
+    entity = Person
+    definition_period = YEAR
+
+    def formula(person, period):
+        _anz_erwachsene_tu = person.tax_unit('_anz_erwachsene_tu', period) 
+        return maximum(0,
+            person('bruttolohn_m', period)
+            - person.tax_unit('eink_st_tu', period) / _anz_erwachsene_tu / 12
+            - person.tax_unit('soli_st_tu', period) / _anz_erwachsene_tu / 12
+            - person('sozialv_beitr_m', period)
+        )
 
 
 class soli_st_tu(Variable):
