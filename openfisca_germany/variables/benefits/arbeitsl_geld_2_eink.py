@@ -45,6 +45,41 @@ class alleinerziehend(Variable):
     definition_period = YEAR
 
 
+class alleinerziehend_hh(Variable):
+    value_type = bool
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.any(household.members('alleinerziehend', period))
+
+
+class alleinerziehenden_mehrbedarf_hh(Variable):
+    value_type = float
+    entity = Household
+    definition_period = YEAR
+
+
+    def formula(household, period, parameters):
+        alleinerziehend_hh = household('alleinerziehend_hh', period)
+        anz_kinder_hh = household('anz_kinder_hh', period)
+        anz_kind_zwischen_0_6_hh = household('anz_kind_zwischen_0_6_hh', period)
+        anz_kind_zwischen_0_15_hh = household('anz_kind_zwischen_0_15_hh', period)
+
+        P = parameters(period).mehrbedarf_anteil
+
+        lower = P.min_1_kind * anz_kinder_hh
+        value = (
+            (anz_kind_zwischen_0_6_hh >= 1)
+            | ((2 <= anz_kind_zwischen_0_15_hh) & (anz_kind_zwischen_0_15_hh <= 3))
+        ) * P.kind_unter_7_oder_mehr
+
+        out = alleinerziehend_hh * value.clip(
+            min=lower, max=P.max
+        )
+        return out
+
+
 class alter(Variable):
     value_type = float
     entity = Person
@@ -55,9 +90,38 @@ class _anz_erwachsene_tu(Variable):
     value_type = float
     entity = TaxUnit
     definition_period = YEAR
-    
+
     def formula(tax_unit, period):
         return tax_unit.sum(~tax_unit.members('kind', period))
+
+
+class anz_kinder_hh(Variable):
+    value_type = int
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        return household.sum(household.members('kind', period))
+
+
+class anz_kind_zwischen_0_6_hh(Variable):
+    value_type = int
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        alter = household.members('alter', period)
+        return household.sum(household.members('kind', period) * (0 <= alter) * (alter <= 6))
+
+
+class anz_kind_zwischen_0_15_hh(Variable):
+    value_type = int
+    entity = Household
+    definition_period = YEAR
+
+    def formula(household, period):
+        alter = household.members('alter', period)
+        return household.sum(household.members('kind', period) * (0 <= alter) * (alter <= 15))
 
 
 class arbeitsl_geld_m(Variable):
