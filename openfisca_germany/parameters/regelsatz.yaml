@@ -1,0 +1,57 @@
+value:
+  values:
+    2005-01-01:
+      value: 338
+  # TODO ADD VALUES
+    2008-07-01:
+      value: 351
+one:
+  values:
+    2011-01-01:
+      value: 364
+  # TODO ADD VALUES for one to six
+    2013-01-01:
+      value: 382
+  # TODO ADD VALUES
+    2019-01-01:
+      value: 424
+two:
+  values:
+    2011-01-01:
+      value: 328
+    2013-01-01:
+      value: 345
+    2019-01-01:
+      value: 382
+three:
+  values:
+    2011-01-01:
+      value: 291
+    2013-01-01:
+      value: 306
+    2019-01-01:
+      value: 339
+four:
+  values:
+    2011-01-01:
+      value: 287
+    2013-01-01:
+      value: 289
+    2019-01-01:
+      value: 322
+five:
+  values:
+    2011-01-01:
+      value: 251
+    2013-01-01:
+      value: 255
+    2019-01-01:
+      value: 302
+six:
+  values:
+    2011-01-01:
+      value: 215
+    2013-01-01:
+      value: 224
+    2019-01-01:
+      value: 245
