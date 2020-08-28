@@ -57,10 +57,14 @@ OUT_COLS = [
 
 YEARS = [2005, 2006, 2009, 2011, 2013, 2016, 2019]
 
+# pip install git+https://github.com/iza-institute-of-labor-economics/gettsim.git#egg=gettsim
+# pip install --editable .[gettsim]
+from gettsim.config import ROOT_DIR
+
 
 @pytest.fixture(scope="module")
 def input_data():
-    return pd.read_csv(Path("/home/thomas/repos/gettsim/gettsim") / "tests" / "test_data" / "test_dfs_alg2.csv")
+    return pd.read_csv(ROOT_DIR / "tests" / "test_data" / "test_dfs_alg2.csv")
 
 
 @pytest.mark.parametrize("year, column", itertools.product(YEARS, OUT_COLS))

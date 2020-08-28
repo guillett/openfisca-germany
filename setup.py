@@ -32,6 +32,12 @@ setup(
             "flake8-print",
             "pandas == 1.1.0",
             "pycodestyle >=2.3.0,<2.6.0",  # To avoid incompatibility with flake
+            ],
+        "gettsim": [
+            "bokeh ==  2.1.1",
+            "networkx == 2.4",
+            "pytest == 6.0.1",
+            "Pygments == 2.6.1"
             ]
         },
     packages=find_packages(),
