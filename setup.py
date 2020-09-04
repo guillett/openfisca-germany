@@ -24,6 +24,7 @@ setup(
         ],
     install_requires = [
         "OpenFisca-Core[web-api] >=27.0,<35.0",
+        "OpenFisca-Survey-Manager >= 0.39.1,<1.0",
         ],
     extras_require = {
         "dev": [
